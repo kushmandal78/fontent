@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Object Remover Tool</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --border: #dee2e6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .upload-section {
+            text-align: center;
+            border: 2px dashed var(--border);
+            padding: 40px 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-section:hover {
+            border-color: var(--primary);
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background-color: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a08a1;
+        }
+
+        .preview-section {
+            display: none;
+        }
+
+        .preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin: 20px 0;
+        }
+
+        .preview-box {
+            flex: 1;
+            min-width: 300px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .preview-header {
+            background-color: var(--light);
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+        }
+
+        .preview-content {
+            height: 400px;
+            overflow: auto;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+
+        .pdf-preview {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .processing-section {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(67, 97, 238, 0.2);
+            border-top: 5px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .download-section {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .success-icon {
+            font-size: 60px;
+            color: var(--success);
+            margin-bottom: 20px;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .file-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: var(--light);
+            border-radius: 6px;
+        }
+
+        .file-name {
+            font-weight: 600;
+        }
+
+        .file-size {
+            color: var(--gray);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px 0;
+            color: var(--gray);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            width: 120px;
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: -60px;
+            width: 120px;
+            height: 2px;
+            background-color: var(--border);
+        }
+
+        .step.active:not(:last-child)::after {
+            background-color: var(--primary);
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--light);
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-bottom: 8px;
+            border: 2px solid var(--border);
+        }
+
+        .step.active .step-number {
+            background-color: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .step.completed .step-number {
+            background-color: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        .step-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+            text-align: center;
+        }
+
+        .step.active .step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .selected-file-section {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .preview-container {
+                flex-direction: column;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .step:not(:last-child)::after {
+                display: none;
+            }
+
+            .step-indicator {
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>PDF Object Remover Tool</h1>
+            <p class="subtitle">Upload your PDF, remove unwanted objects, and download the clean version</p>
+        </header>
+
+        <div class="step-indicator">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-label">Upload PDF</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-label">Preview & Remove</div>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <div class="step-label">Processing</div>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-number">4</div>
+                <div class="step-label">Download</div>
+            </div>
+        </div>
+
+        <div class="card upload-section" id="uploadSection">
+            <div class="upload-icon">📄</div>
+            <h2 class="upload-text">Upload Your PDF File</h2>
+            <input type="file" id="pdfInput" accept=".pdf" style="display: none;">
+            <button class="btn" id="uploadBtn">Choose PDF File</button>
+            <p style="margin-top: 15px; color: var(--gray);">Max file size: 10MB</p>
+
+            <div class="selected-file-section" id="selectedFileSection">
+                <div class="file-info" style="margin-top: 20px;">
+                    <span class="file-name" id="selectedFileName">No file selected</span>
+                    <span class="file-size" id="selectedFileSize">-</span>
+                </div>
+                <button class="btn" id="processBtn" style="margin-top: 15px;">Process PDF</button>
+                <button class="btn btn-secondary" id="changeFileBtn" style="margin-top: 15px; margin-left: 10px;">Change
+                    File</button>
+            </div>
+        </div>
+
+        <div class="card preview-section" id="previewSection">
+            <h2>Preview PDF</h2>
+            <div class="file-info">
+                <span class="file-name" id="fileName">document.pdf</span>
+                <span class="file-size" id="fileSize">2.5 MB</span>
+            </div>
+
+            <div class="preview-container">
+                <div class="preview-box">
+                    <div class="preview-header">Original PDF</div>
+                    <div class="preview-content">
+                        <iframe class="pdf-preview" id="originalPdf" src="about:blank"></iframe>
+                    </div>
+                </div>
+                <div class="preview-box">
+                    <div class="preview-header">Processed PDF</div>
+                    <div class="preview-content">
+                        <div id="processedPreview"
+                            style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--gray);">
+                            Objects will be removed after processing
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn" id="removeBtn">Remove Objects</button>
+                <button class="btn btn-secondary" id="uploadNewBtn">Upload New PDF</button>
+            </div>
+        </div>
+
+        <div class="card processing-section" id="processingSection">
+            <div class="spinner"></div>
+            <h2>Removing Objects from PDF</h2>
+            <p>Please wait while we process your PDF file. This may take a few moments.</p>
+            <div id="progressText" style="margin-top: 15px; font-weight: 600;">Processing...</div>
+        </div>
+
+        <div class="card download-section" id="downloadSection">
+            <div class="success-icon">✓</div>
+            <h2>PDF Processing Complete!</h2>
+            <p>Your PDF has been successfully processed and all objects have been removed.</p>
+
+            <div class="file-info" style="max-width: 400px; margin: 20px auto;">
+                <span class="file-name" id="processedFileName">document_processed.pdf</span>
+                <span class="file-size" id="processedFileSize">1.8 MB</span>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn" id="downloadBtn">Download Processed PDF</button>
+                <button class="btn btn-secondary" id="processNewBtn">Process Another PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>PDF Object Remover Tool &copy; 2023 | All rights reserved</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // DOM Elements
+            const uploadSection = document.getElementById('uploadSection');
+            const previewSection = document.getElementById('previewSection');
+            const processingSection = document.getElementById('processingSection');
+            const downloadSection = document.getElementById('downloadSection');
+            const selectedFileSection = document.getElementById('selectedFileSection');
+
+            const pdfInput = document.getElementById('pdfInput');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const processBtn = document.getElementById('processBtn');
+            const changeFileBtn = document.getElementById('changeFileBtn');
+            const removeBtn = document.getElementById('removeBtn');
+            const uploadNewBtn = document.getElementById('uploadNewBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const processNewBtn = document.getElementById('processNewBtn');
+
+            const selectedFileName = document.getElementById('selectedFileName');
+            const selectedFileSize = document.getElementById('selectedFileSize');
+            const fileName = document.getElementById('fileName');
+            const fileSize = document.getElementById('fileSize');
+            const originalPdf = document.getElementById('originalPdf');
+            const processedFileName = document.getElementById('processedFileName');
+            const processedFileSize = document.getElementById('processedFileSize');
+
+            const step1 = document.getElementById('step1');
+            const step2 = document.getElementById('step2');
+            const step3 = document.getElementById('step3');
+            const step4 = document.getElementById('step4');
+
+            let currentFile = null;
+
+            // Event Listeners
+            uploadBtn.addEventListener('click', () => pdfInput.click());
+            uploadSection.addEventListener('dragover', handleDragOver);
+            uploadSection.addEventListener('drop', handleFileDrop);
+            pdfInput.addEventListener('change', handleFileSelect);
+            processBtn.addEventListener('click', showPreview);
+            changeFileBtn.addEventListener('click', resetFileSelection);
+            removeBtn.addEventListener('click', processPDF);
+            uploadNewBtn.addEventListener('click', resetToUpload);
+            downloadBtn.addEventListener('click', downloadPDF);
+            processNewBtn.addEventListener('click', resetToUpload);
+
+            // Functions
+            function handleDragOver(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadSection.style.borderColor = 'var(--primary)';
+                uploadSection.style.backgroundColor = 'rgba(67, 97, 238, 0.1)';
+            }
+
+            function handleFileDrop(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                uploadSection.style.borderColor = 'var(--border)';
+                uploadSection.style.backgroundColor = 'white';
+
+                if (e.dataTransfer.files.length) {
+                    const file = e.dataTransfer.files[0];
+                    if (file.type === 'application/pdf') {
+                        handleFile(file);
+                    } else {
+                        alert('Please upload a PDF file.');
+                    }
+                }
+            }
+
+            function handleFileSelect(e) {
+                if (e.target.files.length) {
+                    const file = e.target.files[0];
+                    handleFile(file);
+                }
+            }
+
+            function handleFile(file) {
+                // Validate file type and size
+                if (file.type !== 'application/pdf') {
+                    alert('Please upload a PDF file.');
+                    return;
+                }
+
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('File size exceeds 10MB limit.');
+                    return;
+                }
+
+                currentFile = file;
+
+                // Update selected file info
+                selectedFileName.textContent = file.name;
+                selectedFileSize.textContent = formatFileSize(file.size);
+
+                // Show selected file section
+                selectedFileSection.style.display = 'block';
+
+                // Update steps
+                step1.classList.remove('active');
+                step1.classList.add('completed');
+                step2.classList.remove('active');
+            }
+
+            function showPreview() {
+                if (!currentFile) {
+                    alert('Please select a PDF file first.');
+                    return;
+                }
+                // backend server uplod code
+                const formData = new FormData();
+                formData.append("file", currentFile);
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "http://127.0.0.1:8000/upload", true);
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        console.log("Upload Success:", xhr.responseText);
+                    } else {
+                        console.error("Upload Failed:", xhr.status);
+                    }
+                };
+
+                xhr.onerror = function () {
+                    console.error("Network Error");
+                };
+
+                // Send request
+                xhr.send(formData);
+
+
+
+                // Update file info in preview
+                fileName.textContent = currentFile.name;
+                fileSize.textContent = formatFileSize(currentFile.size);
+
+                // Create object URL for preview
+                const fileURL = URL.createObjectURL(currentFile);
+                originalPdf.src = fileURL;
+
+                // Show preview section
+                uploadSection.style.display = 'none';
+                previewSection.style.display = 'block';
+
+                // Update steps
+                step2.classList.add('active');
+            }
+
+            function resetFileSelection() {
+                selectedFileSection.style.display = 'none';
+                selectedFileName.textContent = 'No file selected';
+                selectedFileSize.textContent = '-';
+                pdfInput.value = '';
+                currentFile = null;
+
+                // Reset steps
+                step1.classList.add('active');
+                step1.classList.remove('completed');
+                step2.classList.remove('active', 'completed');
+            }
+
+            function processPDF() {
+                // Show processing section
+                previewSection.style.display = 'none';
+                processingSection.style.display = 'block';
+
+                // Update steps
+                step2.classList.remove('active');
+                step2.classList.add('completed');
+                step3.classList.add('active');
+
+                // Simulate processing with progress updates
+                let progress = 0;
+                const progressText = document.getElementById('progressText');
+                const interval = setInterval(() => {
+                    progress += 5;
+                    progressText.textContent = `Processing... ${progress}%`;
+
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        // Show download section after processing
+                        setTimeout(() => {
+                            processingSection.style.display = 'none';
+                            downloadSection.style.display = 'block';
+
+                            // Update steps
+                            step3.classList.remove('active');
+                            step3.classList.add('completed');
+                            step4.classList.add('active');
+
+                            // Set processed file info
+                            processedFileName.textContent = fileName.textContent.replace('.pdf', '_processed.pdf');
+                            processedFileSize.textContent = formatFileSize(Math.max(1, Math.floor(parseFloat(fileSize.textContent) * 0.7))) + ' MB';
+                        }, 500);
+                    }
+                }, 150);
+            }
+
+            function downloadPDF() {
+                // In a real application, this would download the processed PDF from the server
+                alert('In a real application, this would download the processed PDF. For this demo, we\'re simulating the download.');
+
+                // Create a dummy download link
+                const link = document.createElement('a');
+                link.href = '#';
+                link.download = processedFileName.textContent;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+
+            function resetToUpload() {
+                // Reset to initial state
+                uploadSection.style.display = 'block';
+                previewSection.style.display = 'none';
+                processingSection.style.display = 'none';
+                downloadSection.style.display = 'none';
+                selectedFileSection.style.display = 'none';
+
+                // Reset steps
+                step1.classList.add('active');
+                step1.classList.remove('completed');
+                step2.classList.remove('active', 'completed');
+                step3.classList.remove('active', 'completed');
+                step4.classList.remove('active', 'completed');
+
+                // Reset file input and current file
+                pdfInput.value = '';
+                currentFile = null;
+                selectedFileName.textContent = 'No file selected';
+                selectedFileSize.textContent = '-';
+            }
+
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        });
+    </script>
+</body>
+
+</html>

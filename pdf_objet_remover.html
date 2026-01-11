@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple PDF Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .upload-box {
+            border: 2px dashed #ccc;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+        }
+        .upload-box:hover {
+            border-color: #007bff;
+        }
+        .file-info {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h2>Upload PDF File</h2>
+    
+    <div class="upload-box" id="uploadBox">
+        <p>Click to select PDF or drag & drop</p>
+        <small>Max size: 10MB</small>
+    </div>
+    
+    <input type="file" id="pdfInput" accept=".pdf" style="display: none;">
+    
+    <div class="file-info" id="fileInfo" style="display: none;">
+        <strong>Selected:</strong> <span id="fileName"></span>
+        (<span id="fileSize"></span>)
+        <button type="button" onclick="clearFile()" style="margin-left: 10px;">×</button>
+    </div>
+    
+    <button class="btn" id="uploadBtn" disabled>Upload PDF</button>
+
+    <script>
+        const uploadBox = document.getElementById('uploadBox');
+        const pdfInput = document.getElementById('pdfInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const uploadBtn = document.getElementById('uploadBtn');
+
+        uploadBox.addEventListener('click', () => pdfInput.click());
+        
+        uploadBox.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadBox.style.borderColor = '#007bff';
+        });
+        
+        uploadBox.addEventListener('dragleave', () => {
+            uploadBox.style.borderColor = '#ccc';
+        });
+        
+        uploadBox.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadBox.style.borderColor = '#ccc';
+            if (e.dataTransfer.files[0]) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        pdfInput.addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (file.type !== 'application/pdf') {
+                alert('Please select a PDF file');
+                return;
+            }
+            
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatSize(file.size);
+            fileInfo.style.display = 'block';
+            uploadBtn.disabled = false;
+            window.currentFile = file;
+        }
+
+        function clearFile() {
+            pdfInput.value = '';
+            fileInfo.style.display = 'none';
+            uploadBtn.disabled = true;
+            delete window.currentFile;
+        }
+
+        function formatSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        uploadBtn.addEventListener('click', async () => {
+            if (!window.currentFile) return;
+            
+            const formData = new FormData();
+            formData.append('file', window.currentFile);
+            
+            try {
+                const response = await fetch('http://127.0.0.1:8000/upload/', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                alert('Upload successful!');
+                console.log('Server response:', result);
+                
+            } catch (error) {
+                alert('Upload failed: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

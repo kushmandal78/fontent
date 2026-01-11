@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .image-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .img-box {
+            position: relative;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .img-box img {
+            width: 110px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .img-box input {
+            display: none;
+        }
+
+        .img-box input:checked+img {
+            border: 3px solid #4CAF50;
+        }
+    </style>
+    <title>Document</title>
+</head>
+
+<body>
+    <div id="imageContainer" class="image-grid"></div>
+
+    <button onclick="getSelectedImages()">Submit Selected Images</button>
+
+    <script>
+        const images = [
+            "img1.jpg",
+            "img2.jpg",
+            "img3.jpg",
+            "img4.jpg"
+        ];
+
+        // Render images
+        const container = document.getElementById("imageContainer");
+        images.forEach(img => {
+            container.innerHTML += `
+            <label class="img-box">
+              <input type="checkbox" value="${img}">
+              <img src="${img}">
+            </label>
+          `;
+        });
+
+        // Get selected images
+        function getSelectedImages() {
+            const selectedImages = [];
+
+            document
+                .querySelectorAll('#imageContainer input[type="checkbox"]:checked')
+                .forEach(input => selectedImages.push(input.value));
+
+            if (selectedImages.length === 0) {
+                alert("Please select at least one image");
+                return;
+            }
+
+            console.log("Selected images:", selectedImages);
+            alert("Selected:\n" + selectedImages.join("\n"));
+        }
+    </script>
+
+
+</body>
+
+</html>
