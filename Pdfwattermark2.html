@@ -1480,6 +1480,7 @@
     </footer>
 
     <script>
+        const API_BASE = "http://16.176.142.118:8000";
         let fileList = []
         let processedPdfInfo = null; // Store processed PDF info
         document.addEventListener('DOMContentLoaded', function () {
@@ -1625,7 +1626,7 @@
                         }, 100);
 
                         // Upload file using fetch
-                        const response = await fetch('http://127.0.0.1:8000/upload', {
+                        const response = await fetch(`${API_BASE}/upload`, {
                             method: 'POST',
                             body: formData
                         });
@@ -1758,7 +1759,7 @@
                 async function checkProcessingStatus() {
                     try {
                         const response = await fetch(
-                            `http://127.0.0.1:8000/process/${encodeURIComponent(fileList[0])}`,
+                            `${API_BASE}/process/${encodeURIComponent(fileList[0])}`,
                             { method: "POST" }
                         );
 
@@ -1809,7 +1810,7 @@
                                 // Display processed PDF in iframe
                                 const processPDFFrame = document.getElementById('processPDF');
                                 if (processPDFFrame && processedPdfInfo.url) {
-                                    const fullUrl = `http://127.0.0.1:8000${processedPdfInfo.url}`;
+                                    const fullUrl = `${API_BASE}${processedPdfInfo.url}`;
                                     processPDFFrame.src = fullUrl;
                                 }
 
@@ -1854,7 +1855,7 @@
 
                 try {
                     // Create download URL from backend
-                    const downloadUrl = `http://127.0.0.1:8000/download/${encodeURIComponent(processedPdfInfo.filename)}`;
+                    const downloadUrl = `${API_BASE}/download/${encodeURIComponent(processedPdfInfo.filename)}`;
                     
                     // Create a link element and trigger download
                     const link = document.createElement('a');
